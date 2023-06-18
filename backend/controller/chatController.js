@@ -1,0 +1,102 @@
+import asyncHandler from "express-async-handler";
+import Chat from "../models/chatModel.js";
+import User from "../models/userModel.js";
+
+// ONE TO ONE CHAT FUNCTION
+const accessChat = asyncHandler(async (req, resp) => {
+  const { userId } = req.body; //user id send by the user by selecting one chat
+  if (!userId) {
+    console.log("PARAM NOT SEND");
+    return resp.sendStatus(400);
+  }
+  let ischat = await Chat.find({
+    isGroup: false,
+    users: { $all: [req.user._id, userId] },
+  })
+    .populate("users", "-password")   //populate the users all data except password
+    .populate("latestMessage");       //populate the all data of latestMessage
+
+  ischat = await User.populate(ischat, {
+    path: "latestMessage.sender",    //here we are selecting the name pic email of the sender of the latest message.
+    select: "name pic email",
+  });
+
+  // if the chat is present then show that other wise create
+  if (ischat.length > 0) {
+    resp.send(ischat[0]);
+  } else {
+    let chatData = {
+      chatName: "sender",
+      isGroup: false,
+      users: [req.user._id, userId],
+    };
+    try {
+      const createdChat = await Chat.create(chatData);
+      const fullChat = await Chat.findOne({ _id: createdChat._id }).populate(
+        "users",
+        "-password"
+      );
+      resp.status(200).send(fullChat);
+    } catch (error) {
+      // error
+      resp.status(400);
+      throw new Error(error.message);
+    }
+  }
+});
+
+// FETCHING ALL THE CHAT THAT THE USER HAVING
+const allChat = asyncHandler(async (req, resp) => {
+  try {
+    let result = await Chat.find({ users: { $in: [req.user._id] } })
+      .populate("users", "-password")
+      .populate("latestMessage")
+      .populate("groupAdmin", "-password")
+      .sort({updatedAt: -1});
+    result = await User.populate(result, {
+      path: "latestMessage.sender",
+      select: "name pic email",
+    });
+    resp.status(200).send(result);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+});
+
+// CREATE A GROUP CHAT 
+const creatGroupChat = asyncHandler(async(req, resp)=>{
+  if(!req.body.name || !req.body.users){
+    return resp.status(400).send({message: "Please fill all the field"})
+  }
+  let users = await JSON.parse(req.body.users);
+  users.push(req.user);          // here we add the user who creating the grop 
+  let groupChatData = { 
+    chatName: req.body.name,
+    isGroup: true,
+    users: users,
+    groupAdmin: req.user
+  };    
+  try{
+    const createdGroupChat = await Chat.create(groupChatData);
+    const fullChat = await Chat.findOne({ _id: createdGroupChat._id }).populate(
+      "users",
+      "-password"
+    );
+    resp.status(200).send(fullChat);
+  }catch(error){
+    throw new Error(error);
+  }
+});
+const renameGroup = asyncHandler( async(req, resp)=>{
+  const {chatName, chatId} = req.body;
+  // const user =
+  console.log(req.user.isAdmin);
+  const updatedChat = await Chat.findByIdAndUpdate(chatId, {chatName}, {new: true}).populate("users", "-password").populate("groupAdmin", "-password")
+  if(!updatedChat){
+    throw new Error("chat not found");
+
+  }else{
+    resp.json(updatedChat);
+  }
+});
+export { accessChat, allChat, creatGroupChat, renameGroup };

@@ -17,11 +17,12 @@ const registerAction = asyncHandler(async (req, resp) => {
     resp.status(400);
     throw new Error("User already Exists");
   } else {
-    const user = await User.create({
-      name,
-      email,
-      password,
-    });
+    const userInfo = {
+      name: name.trim(),
+      email: email.trim(),
+      password: password
+    };
+    const user = await User.create(userInfo);
     if (user) {
       resp
         .status(201)
@@ -54,20 +55,23 @@ const loginAction = asyncHandler(async (req, resp) => {
       });
   } else {
     resp.status(403).json({ message: "Wrong email or password" });
-    // throw new Error("wrong password")
   }
 });
 
 
 const searchUser = asyncHandler(async (req, resp) => {
-  const keyword = req.query.search
-    ? {
+  const searchQuery = req.query.search;
+  if(!searchQuery){
+    resp.send([]);
+    return
+  }
+  const keyword =  {
         $or: [
           { name: { $regex: req.query.search, $options: "i" } },
           { email: { $regex: req.query.search, $options: "i" } },
         ],
       }
-    : {};
+
   const users = await User.find({ ...keyword, _id: { $ne: req.user._id } }).select("-password");
   resp.send(users);
 });
