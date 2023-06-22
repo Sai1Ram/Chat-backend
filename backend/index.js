@@ -15,7 +15,7 @@ app.use(express.json());
 app.use("/auth/user", userRoutes);
 app.use("/auth/chat", chatRoutes);
 app.use("/auth/message", messageRouter);
-app.use(notFound);
+// app.use(notFound);
 
 const PORT = process.env.PORT || 5000;
 
