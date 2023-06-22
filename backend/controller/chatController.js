@@ -5,14 +5,18 @@ import User from "../models/userModel.js";
 // ONE TO ONE CHAT FUNCTION
 const accessChat = asyncHandler(async (req, resp) => {
   const { userId } = req.body; //user id send by the user by selecting one chat
+  
   if (!userId) {
     console.log("PARAM NOT SEND");
     return resp.sendStatus(400);
   }
-  let ischat = await Chat.find({
+  let sender = await User.findOne({_id:userId})
+  let ischat = await Chat.findOneAndUpdate({
     isGroup: false,
     users: { $all: [req.user._id, userId] },
-  })
+  },
+  { chatName: sender }, // Update the chatName field with the new value
+  { new: true } )
     .populate("users", "-password")   //populate the users all data except password
     .populate("latestMessage");       //populate the all data of latestMessage
 
@@ -23,10 +27,12 @@ const accessChat = asyncHandler(async (req, resp) => {
 
   // if the chat is present then show that other wise create
   if (ischat.length > 0) {
+
     resp.send(ischat[0]);
   } else {
+    
     let chatData = {
-      chatName: "sender",
+      chatName: sender.name,
       isGroup: false,
       users: [req.user._id, userId],
     };

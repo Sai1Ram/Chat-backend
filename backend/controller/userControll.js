@@ -65,13 +65,7 @@ const searchUser = asyncHandler(async (req, resp) => {
     resp.send([]);
     return
   }
-  const keyword =  {
-        $or: [
-          { name: { $regex: req.query.search, $options: "i" } },
-          { email: { $regex: req.query.search, $options: "i" } },
-        ],
-      }
-
+  const keyword =  { name: { $regex: req.query.search, $options: "i" } } 
   const users = await User.find({ ...keyword, _id: { $ne: req.user._id } }).select("-password");
   resp.send(users);
 });
