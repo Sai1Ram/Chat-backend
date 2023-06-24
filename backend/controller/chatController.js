@@ -10,12 +10,12 @@ const accessChat = asyncHandler(async (req, resp) => {
     console.log("PARAM NOT SEND");
     return resp.sendStatus(400);
   }
-  let sender = await User.findOne({_id:userId})
+  let sender = await User.findOne({_id:userId});
   let ischat = await Chat.findOneAndUpdate({
     isGroup: false,
-    users: { $all: [req.user._id, userId] },
+  users: { $all: [req.user._id, userId] },
   },
-  { chatName: sender }, // Update the chatName field with the new value
+  { chatName: sender.name}, // Update the chatName field with the new value
   { new: true } )
     .populate("users", "-password")   //populate the users all data except password
     .populate("latestMessage");       //populate the all data of latestMessage
@@ -26,7 +26,7 @@ const accessChat = asyncHandler(async (req, resp) => {
   });
 
   // if the chat is present then show that other wise create
-  if (ischat.length > 0) {
+  if (ischat) {
 
     resp.send(ischat[0]);
   } else {
@@ -118,6 +118,8 @@ const removeFromGroup =asyncHandler(async (req, resp) =>{
     resp.json(removedFromGroup);
   }
 })
+
+// ADDING MEMBERS TO GROUP
 const addToGroup = asyncHandler(async (req, resp) =>{
     const {chatId, userId} = req.body;
     const addedUser = await Chat.findByIdAndUpdate(chatId,{$push:{users: userId} }, {new: true}).populate("users", "-password").populate("groupAdmin", "-password");
@@ -128,4 +130,6 @@ const addToGroup = asyncHandler(async (req, resp) =>{
       resp.json(addedUser);
     }
 })
+
+// EXPORTING ALL THE FUNCTIONS
 export { accessChat, allChat, creatGroupChat, renameGroup, removeFromGroup, addToGroup };
