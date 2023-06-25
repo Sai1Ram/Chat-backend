@@ -10,12 +10,13 @@ const accessChat = asyncHandler(async (req, resp) => {
     console.log("PARAM NOT SEND");
     return resp.sendStatus(400);
   }
-  let sender = await User.findOne({_id:userId});
+  let recipient = await User.findOne({_id:userId});
+
   let ischat = await Chat.findOneAndUpdate({
     isGroup: false,
   users: { $all: [req.user._id, userId] },
   },
-  { chatName: sender.name}, // Update the chatName field with the new value
+  { chatName: recipient.name}, // Update the chatName field with the new value
   { new: true } )
     .populate("users", "-password")   //populate the users all data except password
     .populate("latestMessage");       //populate the all data of latestMessage
@@ -31,7 +32,7 @@ const accessChat = asyncHandler(async (req, resp) => {
   } else {
     
     let chatData = {
-      chatName: sender.name,
+      chatName: recipient.name,
       isGroup: false,
       users: [req.user._id, userId],
     };
