@@ -27,8 +27,7 @@ const accessChat = asyncHandler(async (req, resp) => {
 
   // if the chat is present then show that other wise create
   if (ischat) {
-
-    resp.send(ischat[0]);
+    resp.send(ischat);
   } else {
     
     let chatData = {
