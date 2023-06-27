@@ -26,7 +26,7 @@ const server = app.listen(PORT, ()=>{console.log("server started");} );
 const io = new Server(server, {
     pingTimeout: 60000,
     cors:{
-        origin:"https://chat-apis.onrender.com"
+        origin:"https://chat-frontend-ij3ytllrr-sai1ram.vercel.app/"
     }
 });
 
