@@ -18,15 +18,6 @@ app.use("/auth/user", userRoutes);
 app.use("/auth/chat", chatRoutes);
 app.use("/auth/message", messageRouter);
 // app.use(notFound);
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://quick-chat-sai.vercel.app');
-  // You can also use '*' to allow all origins
-  // res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
-});
-
 
 const PORT = process.env.PORT || 5000;
 
@@ -35,7 +26,10 @@ const server = app.listen(PORT, ()=>{console.log("server started");} );
 const io = new Server(server, {
     pingTimeout: 60000,
     cors:{
-        origin:"https://quick-chat-sai.vercel.app/"
+        origin:"https://quick-chat-sai.vercel.app/",
+        methods: ["GET", "POST"],
+        allowedHeaders: ["my-custom-header"],
+        credentials: true
     }
 });
 
@@ -61,7 +55,7 @@ io.on("connection", (socket) => {
       chat.users.forEach((user) => {
         if (user._id == newMessageRecieved.sender._id) return;
   
-        socket.emit("message recieved", newMessageRecieved);
+        socket.broadcast.emit("message recieved", newMessageRecieved);
       });
     });
   
