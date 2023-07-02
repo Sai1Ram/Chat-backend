@@ -14,8 +14,8 @@ const registerAction = asyncHandler(async (req, resp) => {
 
   const userExist = await User.findOne({ email });
   if (userExist) {
-    resp.status(400);
-    throw new Error("User already Exists");
+    resp.status(400).json({ message: "Please fill the field" });
+    // throw new Error("User already Exists");
   } else {
     const userInfo = {
       name: name.trim(),
